@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Formulario from "./Formulario";
 
 import styled from "@emotion/styled"; //esto ya nos permite definir un styled component
@@ -45,12 +45,38 @@ const Imagen = styled.img`
 `;
 
 function App() {
+
+  const [monedas, setMonedas] = useState({})
+  const [cotizacion, setCotizacion] = useState({})
+  const [cargando, setCargando] = useState(false)
+
+  useEffect(() => {
+    if(Object.keys(monedas).length > 0) { //Recordar que para poder saber si un objeto esta vacio, se usa Object.keys
+        setCargando(true)
+        setCotizacion({})
+        const cotizarCripto = async () => {
+        const {moneda, criptoMoneda} = monedas
+        const url = `https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${criptoMoneda}&tsyms=${moneda}` //En la url sustituimos unos valores para poder inyectar los valores que tiene el objeto de moneda, los cuales eran moneda MXN y criptomoneda BTC por ejemplo
+        const respuesta = await fetch(url)
+        const resultado = await respuesta.json()
+        setCotizacion(resultado.DISPLAY[criptoMoneda][moneda]) //Aqui estamos haciendo la busqueda de forma dinamica ya que la informacion se encuentra un poco mas escondida
+
+        setCargando(false)
+      }
+      cotizarCripto()
+    }
+  },[monedas])
+
   return (
     <Contenedor>
       <Imagen src={ImagenCripto} alt="Imagen principal de criptos" />
       <div>
         <Heading>Cotiza las criptomonedas al instante</Heading>
-        <Formulario/>
+        <Formulario
+          setMonedas={setMonedas}
+          cotizacion={cotizacion}
+          cargando={cargando}
+        />
       </div>
     </Contenedor>
   );
